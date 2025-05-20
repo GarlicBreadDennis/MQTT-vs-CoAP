@@ -31,6 +31,10 @@ ENERGY_RATE_COAP = 0.3  # mJ per ms
 mqtt_security = "Secure (TLS Enabled)"
 coap_security = "Partially Secure (DTLS not configured)"
 
+# --- Security Scores for Visualization ---
+mqtt_security_score = []
+coap_security_score = []
+
 # --- MQTT Section ---
 
 def on_connect(client, userdata, flags, rc, properties=None):
@@ -102,11 +106,6 @@ async def coap_request():
         except Exception as e:
             print(f"[CoAP] Failed to fetch resource: {e}")
 
-# Note: DTLS support is not configured in this script. To enable DTLS:
-# - Use a DTLS-enabled CoAP server
-# - Configure aiocoap for PSK/certificate security
-# - Example servers: Eclipse Californium with DTLS
-
 # --- Thread Wrappers ---
 
 def run_coap():
@@ -141,6 +140,12 @@ def print_metrics():
 # --- Visualization ---
 
 def visualize_results():
+    # --- Populate Security Score Lists ---
+    # 3 = High, 2 = Medium, 1 = Low
+    global mqtt_security_score, coap_security_score
+    mqtt_security_score = [3] * len(mqtt_latencies)
+    coap_security_score = [1] * len(coap_latencies)
+
     # --- Latency Plot ---
     plt.figure(figsize=(8, 5))
     plt.plot(mqtt_latencies, label="MQTT Latency (ms)", marker='o', linestyle='--', color='blue')
@@ -172,6 +177,20 @@ def visualize_results():
     plt.title("IoT Protocol Energy Consumption", fontsize=14)
     plt.xlabel("Message Index", fontsize=12)
     plt.ylabel("Energy (millijoules)", fontsize=12)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # --- Security Level Plot ---
+    plt.figure(figsize=(8, 5))
+    plt.plot(mqtt_security_score, label="MQTT Security Level", marker='o', linestyle='--', color='navy')
+    plt.plot(coap_security_score, label="CoAP Security Level", marker='x', linestyle='-.', color='teal')
+    plt.title("IoT Protocol Security Comparison", fontsize=14)
+    plt.xlabel("Message Index", fontsize=12)
+    plt.ylabel("Security Level (1=Low, 3=High)", fontsize=12)
+    plt.ylim(0, 4)
+    plt.yticks([1, 2, 3], ["Low", "Medium", "High"])
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
